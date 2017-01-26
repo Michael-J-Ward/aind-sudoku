@@ -151,6 +151,7 @@ def naked_twins(values):
                 assign_value(values, peer, new_value)
     return values
 
+
 # Executors
 
 def reduce_puzzle(values):
@@ -167,18 +168,21 @@ def reduce_puzzle(values):
     """
     stalled = False
     while not stalled:
-        solved_values_before = len([box for box, choices in values.items()
-                                    if len(choices) == 1])
-        assert solved_values_before == sum(len(v)==1 for v in values.values())
+        # store the number of solved boxes prior to execution
+        solved_values_before = sum(len(v)==1 for v in values.values())
+
+        # execute strategies
         values = eliminate(values)
-        values = only_choice(values)
         values = naked_twins(values)
-        solved_values_after = len([box for box, choices in values.items()
-                                   if len(choices) == 1])
-        assert solved_values_after == sum(len(v)==1 for v in values.values())
+        values = only_choice(values)
+
+        # count the number of solved boxes after execution
+        solved_values_after = sum(len(v)==1 for v in values.values())
+
+        # check to see if we have stalled
         stalled = solved_values_before == solved_values_after
-        if len([box for box in values.keys() if len(values[box]) == 0]):
-            display(values)
+        # or if we have hit a dead end, i.e. a box with no options
+        if any(len(v) == 0 for v in values.values()):
             return False
     return values
 
@@ -200,6 +204,7 @@ def search(values):
         attempt = search(new_sudoku)
         if attempt:
             return attempt
+
 
 def solve(grid):
     """
