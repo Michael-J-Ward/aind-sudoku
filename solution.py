@@ -1,4 +1,5 @@
 from collections import defaultdict
+import string
 
 assignments = []
 
@@ -28,7 +29,10 @@ COLUMN_UNITS = [cross(ROWS, c) for c in COLS]
 SQUARE_UNITS = [cross(rs, cs)
                 for rs in ('ABC', 'DEF', 'GHI')
                 for cs in ('123', '456', '789')]
-UNITLIST = ROW_UNITS + COLUMN_UNITS + SQUARE_UNITS
+DIAG_UNITS = [[a + b for a, b in zip(ROWS, _cols)]
+              for _cols in [COLS, ''.join(reversed(COLS))]]
+_diag_unit_2 = [a + b for a, b in zip(ROWS, reversed(COLS))]
+UNITLIST = ROW_UNITS + COLUMN_UNITS + SQUARE_UNITS + DIAG_UNITS
 UNITS = dict((s, [u for u in UNITLIST if s in u]) for s in BOXES)
 PEERS = dict((s, set(sum(UNITS[s], [])) - set([s])) for s in BOXES)
 
@@ -45,7 +49,7 @@ def grid_values(grid):
             then the value will be '123456789'.
     """
     digits = '123456789'
-    chars = ('c' if c != '.' else digits for c in grid)
+    chars = (c if c != '.' else digits for c in grid)
     return dict(zip(BOXES, chars))
 
 
@@ -78,9 +82,10 @@ def eliminate(values):
             then the value will be '123456789'.
     """
     assigned = ((k, v) for k, v in values.items() if len(v) == 1)
-    for box, value in assigned:
+    for box, digit in assigned:
         for peer in PEERS[box]:
-            assign_value(values, peer, values[peer].replace(value, ''))
+            new_value = values[peer].replace(digit, '')
+            assign_value(values, peer, new_value)
     return values
 
 
@@ -141,7 +146,8 @@ def naked_twins(values):
         for option, boxes in filter_twins(option_map):
             peers = (u for u in unit if u not in boxes)
             for peer in peers:
-                new_value = values[peer].strip(option)
+                trans = str.maketrans('', '', option)
+                new_value = values[peer].translate(trans)
                 assign_value(values, peer, new_value)
     return values
 
@@ -166,11 +172,13 @@ def reduce_puzzle(values):
         assert solved_values_before == sum(len(v)==1 for v in values.values())
         values = eliminate(values)
         values = only_choice(values)
+        values = naked_twins(values)
         solved_values_after = len([box for box, choices in values.items()
                                    if len(choices) == 1])
         assert solved_values_after == sum(len(v)==1 for v in values.values())
         stalled = solved_values_before == solved_values_after
         if len([box for box in values.keys() if len(values[box]) == 0]):
+            display(values)
             return False
     return values
 
@@ -180,11 +188,11 @@ def search(values):
     # First, reduce the puzzle using the previous function
     values = reduce_puzzle(values)
     if values is False:
-        return False  ## Failed earlier
-    if all(len(values[s]) == 1 for s in boxes):
-        return values ## Solved!
+        return False  # Failed earlier
+    if all(len(values[s]) == 1 for s in BOXES):
+        return values  # Solved!
     # Chose one of the unfilled square s with the fewest possibilities
-    n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+    n, s = min((len(values[s]), s) for s in BOXES if len(values[s]) > 1)
     # Now use recurrence to solve each one of the resulting sudokus, and
     for value in values[s]:
         new_sudoku = values.copy()
