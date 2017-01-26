@@ -6,6 +6,21 @@ before_naked_twins = {'I6': '4', 'H9': '3', 'I2': '6', 'E8': '1', 'H3': '5', 'H7
 after_naked_twins = {'G7': '6', 'G6': '3', 'G5': '2', 'G4': '9', 'G3': '1', 'G2': '8', 'G1': '7', 'G9': '5', 'G8': '4', 'C9': '1', 'C8': '5', 'C3': '8', 'C2': '237', 'C1': '23', 'C7': '9', 'C6': '6', 'C5': '37', 'A4': '2357', 'A9': '8', 'A8': '6', 'F1': '6', 'F2': '4', 'F3': '23', 'F4': '1235', 'F5': '8', 'F6': '125', 'F7': '35', 'F8': '9', 'F9': '7', 'B4': '27', 'B5': '1', 'B6': '8', 'B7': '27', 'E9': '2', 'B1': '9', 'B2': '5', 'B3': '6', 'C4': '4', 'B8': '3', 'B9': '4', 'I9': '9', 'I8': '7', 'I1': '23', 'I3': '23', 'I2': '6', 'I5': '5', 'I4': '8', 'I7': '1', 'I6': '4', 'A1': '1', 'A3': '4', 'A2': '237', 'A5': '9', 'E8': '1', 'A7': '27', 'A6': '257', 'E5': '347', 'E4': '6', 'E7': '345', 'E6': '579', 'E1': '8', 'E3': '79', 'E2': '37', 'H8': '2', 'H9': '3', 'H2': '9', 'H3': '5', 'H1': '4', 'H6': '17', 'H7': '8', 'H4': '17', 'H5': '6', 'D8': '8', 'D9': '6', 'D6': '279', 'D7': '34', 'D4': '237', 'D5': '347', 'D2': '1', 'D3': '79', 'D1': '5'}
 
 class TestNakedTwins(unittest.TestCase):
+
+    def test_build_option_map(self):
+        values = {'A1': '4', 'A2': '45', 'A3': '45', 'B3': '45'}
+        unit = ['A1', 'A2', 'A3']
+        expected = {'4': set(['A1']), '45': set(['A2', 'A3'])}
+        received = solution.build_option_map(values, unit)
+        # make sure htat '45' is the only key in the option_map
+        self.assertEqual(expected, received)
+
+    def test_filter_twins(self):
+        option_map = {'4': set(['A1']), '45': set(['A2', 'A3'])}
+        received = list(solution.filter_twins(option_map))
+        expected = [('45', set(['A2', 'A3']))]
+        self.assertEqual(expected, received)
+
     def test_naked_twins(self):
         self.assertEqual(solution.naked_twins(before_naked_twins), after_naked_twins)
 
